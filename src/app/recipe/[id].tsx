@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { Alert, Linking, ScrollView } from "react-native";
+import { Alert, Linking, ScrollView, StyleSheet, View } from "react-native";
 
 import {
   AppBar,
@@ -67,12 +67,19 @@ export default function RecipeScreen() {
         title="Recipe"
         left={backButton}
         right={
-          <IconButton
-            symbol="trash"
-            label="Delete recipe"
-            tintColor={colors.danger}
-            onPress={confirmDelete}
-          />
+          <View style={{ flexDirection: "row" }}>
+            <IconButton
+              symbol="link"
+              label="View original page"
+              onPress={() => Linking.openURL(recipe.sourceUrl)}
+            />
+            <IconButton
+              symbol="trash"
+              label="Delete recipe"
+              tintColor={colors.danger}
+              onPress={confirmDelete}
+            />
+          </View>
         }
       />
       <ContentColumn>
@@ -95,17 +102,17 @@ export default function RecipeScreen() {
               {i + 1}. {step}
             </Text>
           ))}
-          <Button
-            label="Start cooking"
-            onPress={() => router.push(`/recipe/${recipe.id}/cook`)}
-            style={{ marginTop: spacing.lg }}
-          />
-          <Button
-            label="View original page"
-            variant="secondary"
-            onPress={() => Linking.openURL(recipe.sourceUrl)}
-          />
         </ScrollView>
+        {/* Pinned outside the scroll area so it is always one tap away. */}
+        <View
+          style={{
+            padding: spacing.lg,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+          }}>
+          <Button label="Start cooking" onPress={() => router.push(`/recipe/${recipe.id}/cook`)} />
+        </View>
       </ContentColumn>
     </Screen>
   );
