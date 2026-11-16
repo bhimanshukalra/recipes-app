@@ -65,7 +65,7 @@ export default function RecipesScreen() {
   return (
     <Screen>
       <AppBar title="Recipes" />
-      <ContentColumn>
+      <ContentColumn fullWidth>
         {recipes === undefined ? null : recipes.length === 0 ? (
           <EmptyState
             title="No recipes yet"

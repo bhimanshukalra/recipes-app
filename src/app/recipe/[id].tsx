@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Alert, Linking, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Linking, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import {
   AppBar,
@@ -30,6 +30,9 @@ import {
 } from "@/storage";
 import { radius, spacing, useTheme } from "@/theme";
 
+/** Window width, in points, from which the recipe page uses two columns. */
+const WIDE_WIDTH = 700;
+
 function goBack() {
   if (router.canGoBack()) router.back();
   else router.replace("/");
@@ -40,6 +43,9 @@ export default function RecipeScreen() {
   const db = useSQLiteContext();
   const { colors } = useTheme();
   const loaded = useRecipe(id);
+  const { width } = useWindowDimensions();
+  // On a wide window (the Duo open, landscape) put the picture and tags beside the method.
+  const wide = width >= WIDE_WIDTH;
 
   // Favourite and tags change on this screen, so keep the user's edits over the loaded copy.
   const [edits, setEdits] = useState<{ favourite?: boolean; tags?: string[] }>({});
@@ -92,6 +98,68 @@ export default function RecipeScreen() {
   const factor = base && target ? target / base.count : 1;
   const ingredients = scaleIngredients(recipe.ingredients, factor);
 
+  const overview = (
+    <>
+      <Text variant="title">{recipe.name}</Text>
+      {recipe.image ? (
+        <Image
+          source={{ uri: recipe.image }}
+          style={{ width: "100%", aspectRatio: 4 / 3, borderRadius: radius.md }}
+        />
+      ) : null}
+      {meta ? <Text variant="muted">{meta}</Text> : null}
+      <SectionHeader title="Tags" />
+      <TagEditor
+        tags={recipe.tags}
+        suggestions={knownTags}
+        onChange={(tags) => {
+          setEdits((current) => ({ ...current, tags }));
+          setTags(db, recipe.id, tags);
+        }}
+      />
+    </>
+  );
+
+  const method = (
+    <>
+      <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
+      {base && target ? (
+        <Stepper
+          value={target}
+          label={base.label}
+          onChange={(value) => {
+            setServings(value);
+            setAdded(false);
+          }}
+        />
+      ) : null}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
+        <Button
+          label={added ? "Added to grocery list" : "Add to grocery list"}
+          variant="secondary"
+          compact
+          disabled={added || recipe.ingredients.length === 0}
+          onPress={() => {
+            setAdded(true);
+            addToGroceryList(db, toDrafts(ingredients));
+          }}
+        />
+        {added ? (
+          <Button label="View list" variant="ghost" compact onPress={() => router.navigate("/grocery")} />
+        ) : null}
+      </View>
+      {ingredients.map((item, i) => (
+        <Text key={i}>• {factor === 1 ? item.raw : formatIngredientLine(item)}</Text>
+      ))}
+      <SectionHeader title="Steps" count={recipe.steps.length} />
+      {recipe.steps.map((step, i) => (
+        <Text key={i}>
+          {i + 1}. {step}
+        </Text>
+      ))}
+    </>
+  );
+
   return (
     <Screen edges={["left", "right", "bottom"]}>
       <AppBar
@@ -123,60 +191,19 @@ export default function RecipeScreen() {
           </View>
         }
       />
-      <ContentColumn>
-        <ScrollView contentContainerStyle={{ padding: spacing.xxl, gap: spacing.md }}>
-          <Text variant="title">{recipe.name}</Text>
-          {recipe.image ? (
-            <Image
-              source={{ uri: recipe.image }}
-              style={{ width: "100%", aspectRatio: 4 / 3, borderRadius: radius.md }}
-            />
-          ) : null}
-          {meta ? <Text variant="muted">{meta}</Text> : null}
-          <SectionHeader title="Tags" />
-          <TagEditor
-            tags={recipe.tags}
-            suggestions={knownTags}
-            onChange={(tags) => {
-              setEdits((current) => ({ ...current, tags }));
-              setTags(db, recipe.id, tags);
-            }}
-          />
-          <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
-          {base && target ? (
-            <Stepper
-              value={target}
-              label={base.label}
-              onChange={(value) => {
-                setServings(value);
-                setAdded(false);
-              }}
-            />
-          ) : null}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
-            <Button
-              label={added ? "Added to grocery list" : "Add to grocery list"}
-              variant="secondary"
-              compact
-              disabled={added || recipe.ingredients.length === 0}
-              onPress={() => {
-                setAdded(true);
-                addToGroceryList(db, toDrafts(ingredients));
-              }}
-            />
-            {added ? (
-              <Button label="View list" variant="ghost" compact onPress={() => router.navigate("/grocery")} />
-            ) : null}
-          </View>
-          {ingredients.map((item, i) => (
-            <Text key={i}>• {factor === 1 ? item.raw : formatIngredientLine(item)}</Text>
-          ))}
-          <SectionHeader title="Steps" count={recipe.steps.length} />
-          {recipe.steps.map((step, i) => (
-            <Text key={i}>
-              {i + 1}. {step}
-            </Text>
-          ))}
+      <ContentColumn fullWidth>
+        <ScrollView contentContainerStyle={{ padding: spacing.xxl }}>
+          {wide ? (
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: spacing.xxl }}>
+              <View style={{ flex: 1, gap: spacing.md }}>{overview}</View>
+              <View style={{ flex: 1.3, gap: spacing.md }}>{method}</View>
+            </View>
+          ) : (
+            <View style={{ gap: spacing.md }}>
+              {overview}
+              {method}
+            </View>
+          )}
         </ScrollView>
         {/* Pinned outside the scroll area so it is always one tap away. */}
         <View
@@ -186,7 +213,10 @@ export default function RecipeScreen() {
             borderTopColor: colors.border,
             backgroundColor: colors.background,
           }}>
-          <Button label="Start cooking" onPress={() => router.push(`/recipe/${recipe.id}/cook?servings=${factor === 1 ? "" : target}`)} />
+          <Button
+            label="Start cooking"
+            onPress={() => router.push(`/recipe/${recipe.id}/cook?servings=${factor === 1 ? "" : target}`)}
+          />
         </View>
       </ContentColumn>
     </Screen>
