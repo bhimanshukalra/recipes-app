@@ -24,7 +24,7 @@ export default function RecipesScreen() {
   );
 
   return (
-    <Screen edges={["left", "right"]}>
+    <Screen>
       <AppBar title="Recipes" />
       {recipes === undefined ? null : recipes.length === 0 ? (
         <EmptyState
