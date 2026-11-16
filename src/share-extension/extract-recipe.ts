@@ -1,3 +1,5 @@
+import { cleanText, formatDuration, formatYield } from "./clean";
+
 export type CompactRecipe = {
   name: string;
   url?: string;
@@ -77,19 +79,24 @@ export function extractRecipe(
   if (!node) return { parseErrors };
 
   const ingredients = Array.isArray(node.recipeIngredient)
-    ? node.recipeIngredient.filter((i): i is string => typeof i === "string")
+    ? node.recipeIngredient
+        .filter((i): i is string => typeof i === "string")
+        .map(cleanText)
+        .filter(Boolean)
     : [];
+
+  const totalTime = toText(node.totalTime);
 
   return {
     parseErrors,
     recipe: {
-      name: toText(node.name) ?? "Untitled",
+      name: cleanText(toText(node.name) ?? "") || "Untitled",
       url,
       image: toImage(node.image),
-      recipeYield: toText(node.recipeYield),
-      totalTime: toText(node.totalTime),
+      recipeYield: formatYield(node.recipeYield),
+      totalTime: totalTime ? formatDuration(totalTime) : undefined,
       ingredients,
-      steps: collectSteps(node.recipeInstructions),
+      steps: collectSteps(node.recipeInstructions).map(cleanText).filter(Boolean),
     },
   };
 }
