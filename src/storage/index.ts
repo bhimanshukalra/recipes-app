@@ -9,6 +9,13 @@ export {
   type RecipeFilter,
 } from "./filter";
 export {
+  addToGroceryList,
+  clearCheckedGroceryItems,
+  deleteGroceryItem,
+  listGroceryItems,
+  setGroceryItemChecked,
+} from "./grocery";
+export {
   deleteRecipe,
   getRecipe,
   getRecipeBySourceUrl,

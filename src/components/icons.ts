@@ -8,6 +8,7 @@ export const icons = {
   search: { ios: "magnifyingglass", android: "search", web: "search" },
   close: { ios: "xmark", android: "close", web: "close" },
   add: { ios: "plus", android: "add", web: "add" },
+  cart: { ios: "cart", android: "shopping_cart", web: "shopping_cart" },
   link: { ios: "link", android: "link", web: "link" },
   checked: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
   unchecked: { ios: "circle", android: "radio_button_unchecked", web: "radio_button_unchecked" },

@@ -21,6 +21,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="import" />
+              <Stack.Screen name="grocery" />
               <Stack.Screen name="recipe/[id]" />
             </Stack>
           </SQLiteProvider>

@@ -15,7 +15,9 @@ import {
   TagEditor,
   Text,
 } from "@/components";
+import { toDrafts } from "@/grocery";
 import {
+  addToGroceryList,
   collectTags,
   deleteRecipe,
   listRecipes,
@@ -42,6 +44,7 @@ export default function RecipeScreen() {
   const recipe = loaded ? { ...loaded, ...edits } : loaded;
 
   // Tags already used on other recipes, offered as one-tap suggestions.
+  const [added, setAdded] = useState(false);
   const [knownTags, setKnownTags] = useState<string[]>([]);
   useEffect(() => {
     listRecipes(db).then((all) => setKnownTags(collectTags(all)));
@@ -132,6 +135,21 @@ export default function RecipeScreen() {
             }}
           />
           <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
+            <Button
+              label={added ? "Added to grocery list" : "Add to grocery list"}
+              variant="secondary"
+              compact
+              disabled={added || recipe.ingredients.length === 0}
+              onPress={() => {
+                setAdded(true);
+                addToGroceryList(db, toDrafts(recipe.ingredients));
+              }}
+            />
+            {added ? (
+              <Button label="View list" variant="ghost" compact onPress={() => router.push("/grocery")} />
+            ) : null}
+          </View>
           {recipe.ingredients.map((item, i) => (
             <Text key={i}>• {item.raw}</Text>
           ))}

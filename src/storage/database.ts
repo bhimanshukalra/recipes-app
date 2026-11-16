@@ -5,7 +5,7 @@ import { parseIngredient } from "@/ingredients";
 export const DATABASE_NAME = "recipes.db";
 
 /** Bump when the schema or the stored data format changes, and add a migration block below. */
-const DATABASE_VERSION = 4;
+const DATABASE_VERSION = 5;
 
 function parseJson<T>(text: string, fallback: T): T {
   try {
@@ -65,7 +65,21 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
     `);
   }
 
-  // Future migrations: add `if (currentVersion < 5) { ... }` blocks here.
+  if (currentVersion < 5) {
+    // Version 5: the grocery list.
+    await db.execAsync(`
+      CREATE TABLE grocery_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        qty REAL,
+        unit TEXT,
+        checked INTEGER NOT NULL DEFAULT 0,
+        createdAt INTEGER NOT NULL
+      );
+    `);
+  }
+
+  // Future migrations: add `if (currentVersion < 6) { ... }` blocks here.
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
