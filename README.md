@@ -1,19 +1,36 @@
 # Recipes App
 
-An Expo / React Native app for collecting recipes. Share a recipe page from Safari and the app imports it through an iOS share extension, reading the page's JSON-LD directly in the browser. This works on sites that block plain server-side fetches, such as Allrecipes and Serious Eats.
+An Expo / React Native app for collecting recipes and cooking from them. Share a recipe page from Safari and the app imports it through an iOS share extension, reading the page's JSON-LD directly in the browser. This works on sites that block plain server-side fetches, such as Allrecipes and Serious Eats.
 
-**Status:** MVP in progress. Importing, saving, listing and deleting recipes works on the iOS Simulator. It hasn't been tested on a real device or in a release build yet. Details and results are in [docs/share-extension.md](docs/share-extension.md).
+**Status:** all the planned features are built and work on the iOS Simulator (iPhone Duo). It hasn't been tested on a real device or in a release build yet. Details and results of the share extension work are in [docs/share-extension.md](docs/share-extension.md).
+
+## Features
+
+- **Import from Safari.** Share a recipe page and the app saves it: name, photo, yield, time, ingredients and steps.
+- **Recipe list.** Search by name, ingredient or tag, mark favourites, filter by tag.
+- **Recipe page.** Photo, tags, ingredients and steps. On a wide window (the Duo open, landscape) it uses two columns.
+- **Servings scaling.** Change the servings and the amounts rescale, with sensible fractions and rounding.
+- **Cook mode.** The screen stays on, ingredients can be ticked off, and steps go one at a time with swipe and tappable progress. Times in a step (like "bake for 50 mins") get a start button, and running timers show on every step and ring even with the phone locked.
+- **Grocery list.** Add a recipe's ingredients (at the chosen servings), merge matching items (2 eggs + 3 eggs = 5 eggs), tick items off, add your own.
+- **Meal plan.** A Monday to Sunday week view. Plan recipes per day and add the whole week to the grocery list.
+- **Backup.** Export everything to one JSON file through the share sheet, and import it back. Import only adds and never overwrites.
+
+Everything is stored on the phone in SQLite. There are no accounts or servers.
 
 ## How it works
 
 1. `preprocessing.js` runs inside Safari and collects the page's `application/ld+json` blocks.
-2. The share extension (`index.share.js`, `src/share-extension/`) finds the Recipe node and builds a compact recipe.
-3. The extension opens the app at `recipe?data=<base64url>`, and `src/app/recipe.tsx` renders it.
+2. The share extension (`index.share.js`, `src/share-extension/`) finds the Recipe node, cleans it and builds a compact recipe.
+3. The extension opens the app at `import?data=<base64url>`, and `src/app/import.tsx` parses the ingredients and saves the recipe.
+
+Ingredient lines are parsed by hand (`src/ingredients/`) into amount, unit, name and note. The original line is always kept, and shown when a line can't be understood.
 
 ## Stack
 
-- Expo SDK 58, React Native 0.88, Expo Router (routes in `src/app/`)
+- Expo SDK 58, React Native 0.88, Expo Router (routes in `src/app/`) with native tabs
+- `expo-sqlite` for storage, with `PRAGMA user_version` migrations (`src/storage/database.ts`)
 - [`expo-share-extension`](https://github.com/MaxAst/expo-share-extension) 5.x, with local config-plugin fixes in `plugins/with-share-extension-fixes.js`
+- `expo-notifications` (timer alerts), `expo-keep-awake`, `expo-file-system`, `expo-sharing` and `expo-document-picker` (backup)
 
 ## Getting started
 
@@ -24,7 +41,7 @@ npm install
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx expo run:ios
 ```
 
-The share extension is native code, so Expo Go won't work. You need a development build. The `LANG` setting avoids a CocoaPods encoding error during `pod install`.
+The share extension and several libraries are native code, so Expo Go won't work. You need a development build, and a new one after adding a library with native code. The `LANG` setting avoids a CocoaPods encoding error during `pod install`.
 
 In debug builds the extension loads its JavaScript from Metro, so keep it running:
 
@@ -37,25 +54,33 @@ To try it, open a recipe page in Safari in the simulator, tap Share, and pick th
 ## Scripts
 
 ```bash
-npm run lint        # expo lint
-npx tsc --noEmit    # typecheck
+npm run lint                      # expo lint
+npx tsc --noEmit                  # typecheck
+node --test src/*/*.test.ts       # unit tests (Node 24 or later)
 ```
 
 ## Project layout
 
 | Path | Purpose |
 | --- | --- |
-| `src/app/` | Expo Router screens (`index` list, `import`, `recipe/[id]`) |
+| `src/app/` | Expo Router screens. `(tabs)/` holds Recipes, Plan, Grocery list and Settings; `recipe/[id]` (with `cook`), `plan/add` and `import` open above the tabs |
 | `src/share-extension/` | Extension UI and JSON-LD recipe extraction |
-| `preprocessing.js` | Script that runs in Safari to collect JSON-LD |
-| `index.share.js` | Entry point for the share extension |
-| `plugins/` | Local config plugins |
-| `src/storage/` | SQLite storage for recipes |
+| `preprocessing.js`, `index.share.js` | Script that runs in Safari, and the extension's entry point |
+| `src/ingredients/` | Ingredient parsing, formatting and servings scaling |
+| `src/storage/` | SQLite storage: recipes, search and tag filtering, grocery items, meals, backup |
+| `src/grocery/`, `src/planner/`, `src/timers/`, `src/backup/` | Grocery merging, week and date logic, step timers, the backup file format |
 | `src/theme/`, `src/components/` | Design tokens and shared UI components |
-| `docs/` | PoC results and notes |
+| `plugins/` | Local config plugins |
+| `docs/` | Share extension results and notes |
 
-`ios/` and `android/` are generated by Expo and ignored by git.
+`ios/` and `android/` are generated by Expo and ignored by git. Logic such as parsing, merging and scaling is plain TypeScript with tests beside it (`*.test.ts`).
+
+## Known issues
+
+- **Long recipes may not import.** The app opens through a link, and in the simulator a link longer than about 2,000 characters arrives cut off, so the recipe can't be read. A recipe with many long steps is affected. It is not yet known whether a real share from Safari has the same limit. The fix would be to hand the recipe over through shared storage instead of the link.
+- **Not tested on a real device.** That includes sharing from Safari, release builds, keep-awake, timer alerts with the phone locked, and the tab bar on a normal iPhone.
+- **Ingredient parsing is best effort.** Allrecipes and Serious Eats lines haven't been checked yet.
 
 ## Next steps
 
-The MVP flow (share from Safari, save, list, detail, delete) is built. Remaining: check the share sheet end to end in Safari, then test on a real device and a release build (see [docs/share-extension.md](docs/share-extension.md)). After that: parse ingredients into structured data, and Android via `expo-share-intent`.
+Test on a real device and a release build (see [docs/share-extension.md](docs/share-extension.md)), and look at the link length limit. After that: paste a link inside the app, personal notes on a recipe, and Android via `expo-share-intent`.
