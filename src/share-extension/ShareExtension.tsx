@@ -42,7 +42,7 @@ export default function ShareExtension({
         {recipe ? (
           <Button
             title="Open in app"
-            onPress={() => openHostApp(`recipe?data=${payload}`)}
+            onPress={() => openHostApp(`import?data=${payload}`)}
           />
         ) : null}
       </ScrollView>
