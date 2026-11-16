@@ -17,6 +17,17 @@ An Expo / React Native app for collecting recipes and cooking from them. Share a
 
 Everything is stored on the phone in SQLite. There are no accounts or servers.
 
+## Demo
+
+<!--
+Add the demo video here. Either:
+- drag an .mp4 or .mov (up to 100 MB) into the README in GitHub's web editor, which inserts a link that plays inline; or
+- link a hosted video, for example: [![Demo video](docs/demo-thumbnail.png)](https://youtu.be/VIDEO_ID)
+Then delete the line below.
+-->
+
+_Demo video coming soon._
+
 ## How it works
 
 1. `preprocessing.js` runs inside Safari and collects the page's `application/ld+json` blocks.
