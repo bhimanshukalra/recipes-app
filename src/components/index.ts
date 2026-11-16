@@ -6,5 +6,10 @@ export { icons, type IconName } from "./icons";
 export { IconButton, type IconButtonProps } from "./icon-button";
 export { RecipeRow, type RecipeRowProps } from "./recipe-row";
 export { Screen, type ScreenProps } from "./screen";
+export {
+  SegmentedControl,
+  type SegmentedControlOption,
+  type SegmentedControlProps,
+} from "./segmented-control";
 export { SectionHeader, type SectionHeaderProps } from "./section-header";
 export { Text, type AppTextProps } from "./text";
