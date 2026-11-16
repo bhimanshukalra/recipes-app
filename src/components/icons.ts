@@ -2,6 +2,7 @@
 export const icons = {
   back: { ios: "chevron.left", android: "arrow_back", web: "arrow_back" },
   next: { ios: "chevron.right", android: "chevron_right", web: "chevron_right" },
+  settings: { ios: "gearshape", android: "settings", web: "settings" },
   trash: { ios: "trash", android: "delete", web: "delete" },
   share: { ios: "square.and.arrow.up", android: "share", web: "share" },
   favourite: { ios: "heart", android: "favorite", web: "favorite" },

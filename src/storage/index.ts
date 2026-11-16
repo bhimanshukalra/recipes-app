@@ -1,3 +1,4 @@
+export { buildBackup, restoreBackup, type RestoreResult } from "./backup";
 export { DATABASE_NAME, migrateDbIfNeeded } from "./database";
 export { recipeMeta } from "./format";
 export {

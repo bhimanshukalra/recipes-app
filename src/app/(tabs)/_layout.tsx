@@ -1,6 +1,6 @@
 import { NativeTabs } from "expo-router/native-tabs";
 
-/** The main sections: the recipe list, the meal plan and the grocery list. Recipe pages open above this. */
+/** The main sections: the recipe list, the meal plan, the grocery list and settings. Recipe pages open above this. */
 export default function TabsLayout() {
   return (
     <NativeTabs>
@@ -15,6 +15,10 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="grocery">
         <NativeTabs.Trigger.Label>Grocery list</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: "cart", selected: "cart.fill" }} md="shopping_cart" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings">
+        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} md="settings" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
