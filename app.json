@@ -40,7 +40,8 @@
         {
           "preprocessingFile": "./preprocessing.js"
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
