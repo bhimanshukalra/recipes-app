@@ -99,6 +99,8 @@ export async function getRecipeBySourceUrl(
 
 /** Returns true if a recipe was deleted. */
 export async function deleteRecipe(db: SQLiteDatabase, id: number): Promise<boolean> {
+  // Planned meals point at the recipe, so they go with it.
+  await db.runAsync("DELETE FROM meal_plan WHERE recipeId = ?", id);
   const result = await db.runAsync("DELETE FROM recipes WHERE id = ?", id);
   return result.changes > 0;
 }

@@ -1,6 +1,7 @@
 /** Icons by meaning. Add new ones here, never at the call site. */
 export const icons = {
   back: { ios: "chevron.left", android: "arrow_back", web: "arrow_back" },
+  next: { ios: "chevron.right", android: "chevron_right", web: "chevron_right" },
   trash: { ios: "trash", android: "delete", web: "delete" },
   share: { ios: "square.and.arrow.up", android: "share", web: "share" },
   favourite: { ios: "heart", android: "favorite", web: "favorite" },

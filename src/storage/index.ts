@@ -8,6 +8,7 @@ export {
   normaliseTag,
   type RecipeFilter,
 } from "./filter";
+export { addMeal, listMealIngredients, listMeals, removeMeal, type Meal } from "./meals";
 export {
   addToGroceryList,
   clearCheckedGroceryItems,
