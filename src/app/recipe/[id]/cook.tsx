@@ -17,6 +17,7 @@ import {
 } from "@/components";
 import { formatIngredientAmount, parseServings, scaleIngredients, type Ingredient } from "@/ingredients";
 import { useRecipe } from "@/storage";
+import { findDurations, formatClock, useCookTimers, type CookTimer } from "@/timers";
 import { fontSize, opacity, radius, sizes, spacing, useTheme } from "@/theme";
 
 type Tab = "ingredients" | "steps";
@@ -55,9 +56,82 @@ function IngredientLine({ ingredient, done }: { ingredient: Ingredient; done: bo
   );
 }
 
+/** Running timers, shown on every tab and step so none is forgotten. */
+function TimerBar({
+  timers,
+  now,
+  onCancel,
+  onOpen,
+}: {
+  timers: CookTimer[];
+  now: number;
+  onCancel: (timer: CookTimer) => void;
+  onOpen: (step: number) => void;
+}) {
+  const { colors } = useTheme();
+  if (timers.length === 0) return null;
+  return (
+    <View
+      style={{
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.md,
+        gap: spacing.sm,
+      }}>
+      {timers.map((timer) => {
+        const remaining = (timer.endsAt - now) / 1000;
+        const done = remaining <= 0;
+        return (
+          <View
+            key={timer.key}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              borderRadius: radius.pill,
+              backgroundColor: done ? colors.danger : colors.surface,
+              borderWidth: 1,
+              borderColor: done ? colors.danger : colors.border,
+              paddingLeft: spacing.lg,
+            }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Go to step ${timer.step + 1}`}
+              onPress={() => onOpen(timer.step)}
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
+                paddingVertical: spacing.sm,
+              }}>
+              <Text variant="heading" style={{ color: done ? colors.onAccent : colors.text }}>
+                {done ? "Time's up" : formatClock(remaining)}
+              </Text>
+              <Text
+                variant="muted"
+                numberOfLines={1}
+                style={{ flex: 1, color: done ? colors.onAccent : undefined }}>
+                Step {timer.step + 1} · {timer.label}
+              </Text>
+            </Pressable>
+            <IconButton
+              symbol="close"
+              label={done ? "Dismiss timer" : "Cancel timer"}
+              tintColor={done ? colors.onAccent : colors.muted}
+              onPress={() => onCancel(timer)}
+            />
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 /** Cook mode: the screen stays on, text is large, ingredients can be ticked off, steps go one at a time. */
 export default function CookScreen() {
-  const { id, servings } = useLocalSearchParams<{ id: string; servings?: string }>();
+  const { id, servings } = useLocalSearchParams<{
+    id: string;
+    servings?: string;
+  }>();
   const recipe = useRecipe(id);
   // Servings picked on the detail screen scale the amounts here too.
   const base = parseServings(recipe?.recipeYield);
@@ -69,6 +143,7 @@ export default function CookScreen() {
   const [tab, setTab] = useState<Tab>("ingredients");
   const [ticked, setTicked] = useState<ReadonlySet<number>>(new Set());
   const [step, setStep] = useState(0);
+  const { timers, now, start: startTimer, cancel: cancelTimer } = useCookTimers(recipe?.name ?? "Recipe");
 
   // Holds the screen awake for as long as this screen is mounted.
   useKeepAwake();
@@ -110,6 +185,7 @@ export default function CookScreen() {
     });
 
   const lastStep = stepCount - 1;
+  const durations = findDurations(recipe.steps[step] ?? "");
 
   return (
     <Screen>
@@ -121,14 +197,31 @@ export default function CookScreen() {
             value={tab}
             onChange={setTab}
             options={[
-              { value: "ingredients", label: `Ingredients (${ticked.size}/${recipe.ingredients.length})` },
+              {
+                value: "ingredients",
+                label: `Ingredients (${ticked.size}/${recipe.ingredients.length})`,
+              },
               { value: "steps", label: "Steps" },
             ]}
           />
         </View>
 
+        <TimerBar
+          timers={timers}
+          now={now}
+          onCancel={cancelTimer}
+          onOpen={(index) => {
+            setTab("steps");
+            setStep(index);
+          }}
+        />
+
         {tab === "ingredients" ? (
-          <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl }}>
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: spacing.lg,
+              paddingBottom: spacing.xxxl,
+            }}>
             {ingredients.map((ingredient, index) => {
               const done = ticked.has(index);
               return (
@@ -157,7 +250,12 @@ export default function CookScreen() {
         ) : (
           <View style={{ flex: 1 }} {...swipe.panHandlers}>
             {/* Tap a segment to jump to that step. The bar is thin, so the tap area is taller. */}
-            <View style={{ flexDirection: "row", gap: spacing.xs, paddingHorizontal: spacing.xxl }}>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: spacing.xs,
+                paddingHorizontal: spacing.xxl,
+              }}>
               {recipe.steps.map((_, index) => (
                 <Pressable
                   key={index}
@@ -180,11 +278,47 @@ export default function CookScreen() {
               Step {step + 1} of {stepCount}
             </Text>
             <ScrollView contentContainerStyle={{ padding: spacing.xxl }}>
-              <Text style={{ fontSize: fontSize.display, lineHeight: fontSize.display * 1.35 }}>
+              <Text
+                style={{
+                  fontSize: fontSize.display,
+                  lineHeight: fontSize.display * 1.35,
+                }}>
                 {recipe.steps[step]}
               </Text>
             </ScrollView>
-            <View style={{ flexDirection: "row", gap: spacing.md, padding: spacing.lg }}>
+            {/* Pinned above the buttons so a long step never pushes the timers out of sight. */}
+            {durations.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  gap: spacing.sm,
+                  paddingHorizontal: spacing.lg,
+                  paddingBottom: spacing.sm,
+                }}
+                style={{ flexGrow: 0, flexShrink: 0 }}>
+                {durations.map((duration, index) => {
+                  const key = `${step}-${index}`;
+                  const running = timers.some((timer) => timer.key === key);
+                  return (
+                    <Button
+                      key={key}
+                      label={running ? `${duration.label} · running` : `Start ${duration.label}`}
+                      variant="secondary"
+                      compact
+                      disabled={running}
+                      onPress={() => startTimer(key, step, duration.label, duration.seconds)}
+                    />
+                  );
+                })}
+              </ScrollView>
+            ) : null}
+            <View
+              style={{
+                flexDirection: "row",
+                gap: spacing.md,
+                padding: spacing.lg,
+              }}>
               {/* Next is the button you press most, so it gets two thirds of the row; Previous is quiet. */}
               <Button
                 label="Previous"

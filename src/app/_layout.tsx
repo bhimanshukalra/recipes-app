@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import '@/timers/notifications';
 import { DATABASE_NAME, migrateDbIfNeeded } from '@/storage';
 import { ThemeProvider as AppThemeProvider } from '@/theme';
 
