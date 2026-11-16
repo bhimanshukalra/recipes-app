@@ -1,9 +1,19 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import { parseIngredient } from "@/ingredients";
+
 export const DATABASE_NAME = "recipes.db";
 
-/** Bump when the schema changes, and add a migration block below. */
-const DATABASE_VERSION = 1;
+/** Bump when the schema or the stored data format changes, and add a migration block below. */
+const DATABASE_VERSION = 3;
+
+function parseJson<T>(text: string, fallback: T): T {
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 /** Pass to `SQLiteProvider`'s `onInit`. Uses `PRAGMA user_version` to track the schema. */
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
@@ -29,7 +39,25 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
     `);
   }
 
-  // Future migrations: add `if (currentVersion <= 1) { ... }` blocks here.
+  if (currentVersion < 3) {
+    // Versions 2 and 3: ingredients are parsed into qty / unit / name, and the parser
+    // was improved. Parse every saved line again from `raw`, which is kept on each line.
+    // Bump DATABASE_VERSION to re-run this after changing the parser.
+    const rows = await db.getAllAsync<{ id: number; ingredients: string }>(
+      "SELECT id, ingredients FROM recipes",
+    );
+    await db.withTransactionAsync(async () => {
+      for (const row of rows) {
+        const lines = parseJson<{ raw?: unknown }[]>(row.ingredients, []);
+        const parsed = lines
+          .filter((line): line is { raw: string } => typeof line.raw === "string")
+          .map((line) => parseIngredient(line.raw));
+        await db.runAsync("UPDATE recipes SET ingredients = ? WHERE id = ?", JSON.stringify(parsed), row.id);
+      }
+    });
+  }
+
+  // Future migrations: add `if (currentVersion < 4) { ... }` blocks here.
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }

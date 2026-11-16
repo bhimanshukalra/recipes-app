@@ -1,7 +1,6 @@
-/** One ingredient line. `raw` is the text as published; structured fields can be added later. */
-export type Ingredient = {
-  raw: string;
-};
+import type { Ingredient } from "@/ingredients";
+
+export type { Ingredient };
 
 /** A recipe as stored on the device. */
 export type Recipe = {

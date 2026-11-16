@@ -1,3 +1,4 @@
+import { parseIngredient } from "@/ingredients";
 import type { NewRecipe } from "@/storage";
 
 import type { CompactRecipe } from "./extract-recipe";
@@ -14,7 +15,7 @@ export function toNewRecipe(compact: CompactRecipe): NewRecipe | undefined {
     image: compact.image,
     recipeYield: compact.recipeYield,
     totalTime: compact.totalTime,
-    ingredients: compact.ingredients.map((raw) => ({ raw })),
+    ingredients: compact.ingredients.map(parseIngredient),
     steps: compact.steps,
   };
 }

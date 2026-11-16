@@ -72,7 +72,7 @@ export function formatYield(value: unknown): string | undefined {
   if (!entries.length) return undefined;
 
   const text = (entries.find((entry) => /[a-z]/i.test(entry)) ?? entries[0]).replace(
-    /^(makes|serves|yields?)\s*:?\s*/i,
+    /^(makes|serves|yields?|cuts into)\s*:?\s*/i,
     "",
   );
   if (!text) return undefined;
