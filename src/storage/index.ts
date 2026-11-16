@@ -8,3 +8,4 @@ export {
   saveRecipe,
 } from "./recipes";
 export type { Ingredient, NewRecipe, Recipe } from "./types";
+export { useRecipe } from "./use-recipe";

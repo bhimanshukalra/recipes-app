@@ -1,7 +1,6 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
 import { Alert, Linking, ScrollView } from "react-native";
 
 import {
@@ -13,7 +12,7 @@ import {
   SectionHeader,
   Text,
 } from "@/components";
-import { deleteRecipe, getRecipe, recipeMeta, type Recipe } from "@/storage";
+import { deleteRecipe, recipeMeta, useRecipe } from "@/storage";
 import { radius, spacing, useTheme } from "@/theme";
 
 function goBack() {
@@ -25,17 +24,7 @@ export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
   const { colors } = useTheme();
-  const [recipe, setRecipe] = useState<Recipe | null | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    getRecipe(db, Number(id)).then((found) => {
-      if (!cancelled) setRecipe(found);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [db, id]);
+  const recipe = useRecipe(id);
 
   const backButton = <IconButton symbol="back" label="Back" onPress={goBack} />;
 
@@ -105,10 +94,14 @@ export default function RecipeScreen() {
           </Text>
         ))}
         <Button
+          label="Start cooking"
+          onPress={() => router.push(`/recipe/${recipe.id}/cook`)}
+          style={{ marginTop: spacing.lg }}
+        />
+        <Button
           label="View original page"
           variant="secondary"
           onPress={() => Linking.openURL(recipe.sourceUrl)}
-          style={{ marginTop: spacing.lg }}
         />
       </ScrollView>
     </Screen>

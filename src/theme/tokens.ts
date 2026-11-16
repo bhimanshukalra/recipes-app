@@ -26,6 +26,8 @@ export const fontSize = {
   label: 15,
   body: 17,
   title: 22,
+  /** Cook mode: readable from across the counter. */
+  display: 28,
 } as const;
 
 export const opacity = {
