@@ -11,6 +11,7 @@ test("parseServings reads common yield wordings", () => {
   assert.deepEqual(parseServings("Makes 12 cookies."), { count: 12, label: "cookies" });
   assert.deepEqual(parseServings("Serves 4 to 6"), { count: 4, label: "servings" });
   assert.deepEqual(parseServings("4"), { count: 4, label: "servings" });
+  assert.deepEqual(parseServings("16 squares or 32 triangles"), { count: 16, label: "squares" });
 });
 
 test("parseServings gives up when there is no number", () => {

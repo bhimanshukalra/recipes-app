@@ -17,7 +17,8 @@ export function parseServings(yieldText: string | undefined): Servings | undefin
   if (!match) return undefined;
   const count = Number(match[1]);
   if (!Number.isFinite(count) || count <= 0) return undefined;
-  const label = match[2].replace(/[.,;:]+$/, "").trim();
+  // "16 squares or 32 triangles" counts squares; keep only the first thing.
+  const label = match[2].split(/\s+(?:or|\/)\s+/i)[0].replace(/[.,;:]+$/, "").trim();
   return { count, label: label || "servings" };
 }
 
