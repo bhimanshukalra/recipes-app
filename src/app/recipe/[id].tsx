@@ -1,16 +1,30 @@
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { ScrollView } from "react-native";
+import { Alert, Linking, ScrollView } from "react-native";
 
-import { EmptyState, Screen, SectionHeader, Text } from "@/components";
-import { getRecipe, recipeMeta, type Recipe } from "@/storage";
-import { radius, spacing } from "@/theme";
+import {
+  AppBar,
+  Button,
+  EmptyState,
+  IconButton,
+  Screen,
+  SectionHeader,
+  Text,
+} from "@/components";
+import { deleteRecipe, getRecipe, recipeMeta, type Recipe } from "@/storage";
+import { radius, spacing, useTheme } from "@/theme";
+
+function goBack() {
+  if (router.canGoBack()) router.back();
+  else router.replace("/");
+}
 
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
+  const { colors } = useTheme();
   const [recipe, setRecipe] = useState<Recipe | null | undefined>(undefined);
 
   useEffect(() => {
@@ -23,23 +37,55 @@ export default function RecipeScreen() {
     };
   }, [db, id]);
 
-  if (recipe === undefined) return <Screen />;
+  const backButton = <IconButton symbol="back" label="Back" onPress={goBack} />;
+
+  if (recipe === undefined) {
+    return (
+      <Screen edges={["left", "right"]}>
+        <AppBar title="Recipe" left={backButton} />
+      </Screen>
+    );
+  }
 
   if (recipe === null) {
     return (
-      <Screen>
+      <Screen edges={["left", "right"]}>
+        <AppBar title="Recipe" left={backButton} />
         <EmptyState title="Recipe not found" message="It may have been deleted." />
       </Screen>
     );
   }
 
+  const confirmDelete = () => {
+    Alert.alert("Delete this recipe?", recipe.name, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteRecipe(db, recipe.id).then(goBack);
+        },
+      },
+    ]);
+  };
+
   const meta = recipeMeta(recipe);
 
   return (
-    <Screen>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ padding: spacing.xxl, gap: spacing.md }}>
+    <Screen edges={["left", "right", "bottom"]}>
+      <AppBar
+        title="Recipe"
+        left={backButton}
+        right={
+          <IconButton
+            symbol="trash"
+            label="Delete recipe"
+            tintColor={colors.danger}
+            onPress={confirmDelete}
+          />
+        }
+      />
+      <ScrollView contentContainerStyle={{ padding: spacing.xxl, gap: spacing.md }}>
         <Text variant="title">{recipe.name}</Text>
         {recipe.image ? (
           <Image
@@ -58,6 +104,12 @@ export default function RecipeScreen() {
             {i + 1}. {step}
           </Text>
         ))}
+        <Button
+          label="View original page"
+          variant="secondary"
+          onPress={() => Linking.openURL(recipe.sourceUrl)}
+          style={{ marginTop: spacing.lg }}
+        />
       </ScrollView>
     </Screen>
   );
