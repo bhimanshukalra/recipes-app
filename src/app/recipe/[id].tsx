@@ -147,7 +147,7 @@ export default function RecipeScreen() {
               }}
             />
             {added ? (
-              <Button label="View list" variant="ghost" compact onPress={() => router.push("/grocery")} />
+              <Button label="View list" variant="ghost" compact onPress={() => router.navigate("/grocery")} />
             ) : null}
           </View>
           {recipe.ingredients.map((item, i) => (

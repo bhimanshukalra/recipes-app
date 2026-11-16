@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useState } from "react";
@@ -15,11 +15,6 @@ import {
   setGroceryItemChecked,
 } from "@/storage";
 import { fontSize, opacity, radius, sizes, spacing, useTheme } from "@/theme";
-
-function goBack() {
-  if (router.canGoBack()) router.back();
-  else router.replace("/");
-}
 
 export default function GroceryScreen() {
   const db = useSQLiteContext();
@@ -63,8 +58,8 @@ export default function GroceryScreen() {
   const doneCount = sorted.filter((item) => item.checked).length;
 
   return (
-    <Screen edges={["left", "right", "bottom"]}>
-      <AppBar title="Grocery list" left={<IconButton symbol="back" label="Back" onPress={goBack} />} />
+    <Screen>
+      <AppBar title="Grocery list" />
       <ContentColumn>
         <View style={{ flexDirection: "row", gap: spacing.sm, alignItems: "center", padding: spacing.lg }}>
           <TextInput

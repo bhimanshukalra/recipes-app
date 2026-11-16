@@ -19,9 +19,8 @@ export default function RootLayout() {
         <Suspense fallback={null}>
           <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDbIfNeeded} useSuspense>
             <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
+              <Stack.Screen name="(tabs)" />
               <Stack.Screen name="import" />
-              <Stack.Screen name="grocery" />
               <Stack.Screen name="recipe/[id]" />
             </Stack>
           </SQLiteProvider>

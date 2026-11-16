@@ -9,7 +9,6 @@ import {
   Chip,
   ContentColumn,
   EmptyState,
-  IconButton,
   RecipeRow,
   Screen,
   SearchField,
@@ -65,10 +64,7 @@ export default function RecipesScreen() {
 
   return (
     <Screen>
-      <AppBar
-        title="Recipes"
-        right={<IconButton symbol="cart" label="Grocery list" onPress={() => router.push("/grocery")} />}
-      />
+      <AppBar title="Recipes" />
       <ContentColumn>
         {recipes === undefined ? null : recipes.length === 0 ? (
           <EmptyState
