@@ -12,10 +12,12 @@ import {
   IconButton,
   Screen,
   SectionHeader,
+  Stepper,
   TagEditor,
   Text,
 } from "@/components";
 import { toDrafts } from "@/grocery";
+import { formatIngredientLine, parseServings, scaleIngredients } from "@/ingredients";
 import {
   addToGroceryList,
   collectTags,
@@ -45,6 +47,8 @@ export default function RecipeScreen() {
 
   // Tags already used on other recipes, offered as one-tap suggestions.
   const [added, setAdded] = useState(false);
+  // Servings the user picked; undefined means the recipe as published.
+  const [servings, setServings] = useState<number | undefined>(undefined);
   const [knownTags, setKnownTags] = useState<string[]>([]);
   useEffect(() => {
     listRecipes(db).then((all) => setKnownTags(collectTags(all)));
@@ -83,6 +87,10 @@ export default function RecipeScreen() {
   };
 
   const meta = recipeMeta(recipe);
+  const base = parseServings(recipe.recipeYield);
+  const target = base ? (servings ?? base.count) : undefined;
+  const factor = base && target ? target / base.count : 1;
+  const ingredients = scaleIngredients(recipe.ingredients, factor);
 
   return (
     <Screen edges={["left", "right", "bottom"]}>
@@ -135,6 +143,16 @@ export default function RecipeScreen() {
             }}
           />
           <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
+          {base && target ? (
+            <Stepper
+              value={target}
+              label={base.label}
+              onChange={(value) => {
+                setServings(value);
+                setAdded(false);
+              }}
+            />
+          ) : null}
           <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
             <Button
               label={added ? "Added to grocery list" : "Add to grocery list"}
@@ -143,15 +161,15 @@ export default function RecipeScreen() {
               disabled={added || recipe.ingredients.length === 0}
               onPress={() => {
                 setAdded(true);
-                addToGroceryList(db, toDrafts(recipe.ingredients));
+                addToGroceryList(db, toDrafts(ingredients));
               }}
             />
             {added ? (
               <Button label="View list" variant="ghost" compact onPress={() => router.navigate("/grocery")} />
             ) : null}
           </View>
-          {recipe.ingredients.map((item, i) => (
-            <Text key={i}>• {item.raw}</Text>
+          {ingredients.map((item, i) => (
+            <Text key={i}>• {factor === 1 ? item.raw : formatIngredientLine(item)}</Text>
           ))}
           <SectionHeader title="Steps" count={recipe.steps.length} />
           {recipe.steps.map((step, i) => (
@@ -168,7 +186,7 @@ export default function RecipeScreen() {
             borderTopColor: colors.border,
             backgroundColor: colors.background,
           }}>
-          <Button label="Start cooking" onPress={() => router.push(`/recipe/${recipe.id}/cook`)} />
+          <Button label="Start cooking" onPress={() => router.push(`/recipe/${recipe.id}/cook?servings=${factor === 1 ? "" : target}`)} />
         </View>
       </ContentColumn>
     </Screen>

@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatIngredientAmount, formatQuantity } from "./format.ts";
+import { formatIngredientAmount, formatIngredientLine, formatQuantity } from "./format.ts";
 
 test("quantities become tidy numbers and fractions", () => {
   assert.equal(formatQuantity(1), "1");
@@ -33,4 +33,12 @@ test("no unit, and no quantity", () => {
   assert.equal(formatIngredientAmount({ raw: "", qty: 2 }), "2");
   assert.equal(formatIngredientAmount({ raw: "" }), "");
   assert.equal(formatIngredientAmount({ raw: "", unit: "cup" }), "");
+});
+
+test("formatIngredientLine joins amount, name and note, and falls back to raw", () => {
+  assert.equal(
+    formatIngredientLine({ raw: "x", qty: 210, unit: "g", name: "butter", note: "softened" }),
+    "210 g butter, softened",
+  );
+  assert.equal(formatIngredientLine({ raw: "Salt to taste" }), "Salt to taste");
 });

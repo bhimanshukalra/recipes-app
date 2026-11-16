@@ -15,7 +15,7 @@ import {
   Text,
   icons,
 } from "@/components";
-import { formatIngredientAmount, type Ingredient } from "@/ingredients";
+import { formatIngredientAmount, parseServings, scaleIngredients, type Ingredient } from "@/ingredients";
 import { useRecipe } from "@/storage";
 import { fontSize, opacity, radius, sizes, spacing, useTheme } from "@/theme";
 
@@ -57,8 +57,13 @@ function IngredientLine({ ingredient, done }: { ingredient: Ingredient; done: bo
 
 /** Cook mode: the screen stays on, text is large, ingredients can be ticked off, steps go one at a time. */
 export default function CookScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, servings } = useLocalSearchParams<{ id: string; servings?: string }>();
   const recipe = useRecipe(id);
+  // Servings picked on the detail screen scale the amounts here too.
+  const base = parseServings(recipe?.recipeYield);
+  const wanted = Number(servings);
+  const factor = base && wanted > 0 ? wanted / base.count : 1;
+  const ingredients = recipe ? scaleIngredients(recipe.ingredients, factor) : [];
   const { colors } = useTheme();
 
   const [tab, setTab] = useState<Tab>("ingredients");
@@ -124,7 +129,7 @@ export default function CookScreen() {
 
         {tab === "ingredients" ? (
           <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl }}>
-            {recipe.ingredients.map((ingredient, index) => {
+            {ingredients.map((ingredient, index) => {
               const done = ticked.has(index);
               return (
                 <Pressable

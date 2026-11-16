@@ -15,4 +15,5 @@ export {
 export { SearchField, type SearchFieldProps } from "./search-field";
 export { SectionHeader, type SectionHeaderProps } from "./section-header";
 export { TagEditor, type TagEditorProps } from "./tag-editor";
+export { Stepper, type StepperProps } from "./stepper";
 export { Text, type AppTextProps } from "./text";

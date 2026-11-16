@@ -72,3 +72,11 @@ export function formatIngredientAmount(ingredient: Ingredient): string {
   // Metric and other short units sit close to the number ("140 g"); words get a space too.
   return `${quantity} ${formatUnit(ingredient.unit, ingredient.qty, ingredient.qtyMax)}`;
 }
+
+/** A whole ingredient line for display: "210 g butter, softened". Falls back to the raw line. */
+export function formatIngredientLine(ingredient: Ingredient): string {
+  if (ingredient.name === undefined) return ingredient.raw;
+  const amount = formatIngredientAmount(ingredient);
+  const text = amount ? `${amount} ${ingredient.name}` : ingredient.name;
+  return ingredient.note ? `${text}, ${ingredient.note}` : text;
+}

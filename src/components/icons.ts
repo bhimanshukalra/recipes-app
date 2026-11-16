@@ -7,6 +7,7 @@ export const icons = {
   favourited: { ios: "heart.fill", android: "favorite", web: "favorite" },
   search: { ios: "magnifyingglass", android: "search", web: "search" },
   close: { ios: "xmark", android: "close", web: "close" },
+  remove: { ios: "minus", android: "remove", web: "remove" },
   add: { ios: "plus", android: "add", web: "add" },
   cart: { ios: "cart", android: "shopping_cart", web: "shopping_cart" },
   link: { ios: "link", android: "link", web: "link" },
