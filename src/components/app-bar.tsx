@@ -22,6 +22,7 @@ export function AppBar({ title, left, right }: AppBarProps) {
         alignItems: "center",
         height: sizes.appBarHeight + insets.top,
         paddingTop: insets.top,
+        // Side safe-area insets (landscape notch) are applied by the surrounding `Screen`.
         paddingHorizontal: spacing.sm,
         backgroundColor: colors.background,
         borderBottomWidth: StyleSheet.hairlineWidth,

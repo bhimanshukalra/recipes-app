@@ -4,7 +4,7 @@ import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
-import { AppBar, Button, EmptyState, IconButton, Screen, Text, icons } from "@/components";
+import { AppBar, Button, ContentColumn, EmptyState, IconButton, Screen, Text, icons } from "@/components";
 import { useRecipe } from "@/storage";
 import { fontSize, opacity, sizes, spacing, useTheme } from "@/theme";
 
@@ -53,84 +53,86 @@ export default function CookScreen() {
     <Screen>
       <AppBar title={recipe.name} left={backButton} />
 
-      <View style={{ flexDirection: "row", gap: spacing.sm, padding: spacing.lg }}>
-        <Button
-          label={`Ingredients (${ticked.size}/${recipe.ingredients.length})`}
-          compact
-          variant={tab === "ingredients" ? "primary" : "secondary"}
-          onPress={() => setTab("ingredients")}
-          style={{ flex: 1 }}
-        />
-        <Button
-          label="Steps"
-          compact
-          variant={tab === "steps" ? "primary" : "secondary"}
-          onPress={() => setTab("steps")}
-          style={{ flex: 1 }}
-        />
-      </View>
-
-      {tab === "ingredients" ? (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl }}>
-          {recipe.ingredients.map((ingredient, index) => {
-            const done = ticked.has(index);
-            return (
-              <Pressable
-                key={index}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: done }}
-                onPress={() => toggle(index)}
-                style={({ pressed }) => [
-                  styles.row,
-                  { borderBottomColor: colors.border },
-                  pressed && { opacity: opacity.pressed },
-                ]}>
-                <SymbolView
-                  name={done ? icons.checked : icons.unchecked}
-                  size={sizes.icon + 6}
-                  tintColor={done ? colors.accent : colors.muted}
-                />
-                <Text
-                  style={{
-                    flex: 1,
-                    fontSize: fontSize.title,
-                    textDecorationLine: done ? "line-through" : "none",
-                    opacity: done ? opacity.subtle : 1,
-                  }}>
-                  {ingredient.raw}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      ) : recipe.steps.length === 0 ? (
-        <EmptyState title="No steps" message="This recipe has no instructions." />
-      ) : (
-        <View style={{ flex: 1 }}>
-          <Text variant="label" style={{ paddingHorizontal: spacing.xxl }}>
-            Step {step + 1} of {recipe.steps.length}
-          </Text>
-          <ScrollView contentContainerStyle={{ padding: spacing.xxl }}>
-            <Text style={{ fontSize: fontSize.display, lineHeight: fontSize.display * 1.35 }}>
-              {recipe.steps[step]}
-            </Text>
-          </ScrollView>
-          <View style={{ flexDirection: "row", gap: spacing.md, padding: spacing.lg }}>
-            <Button
-              label="Previous"
-              variant="secondary"
-              disabled={step === 0}
-              onPress={() => setStep(step - 1)}
-              style={{ flex: 1 }}
-            />
-            <Button
-              label={step === lastStep ? "Done" : "Next"}
-              onPress={() => (step === lastStep ? goBack() : setStep(step + 1))}
-              style={{ flex: 1 }}
-            />
-          </View>
+      <ContentColumn>
+        <View style={{ flexDirection: "row", gap: spacing.sm, padding: spacing.lg }}>
+          <Button
+            label={`Ingredients (${ticked.size}/${recipe.ingredients.length})`}
+            compact
+            variant={tab === "ingredients" ? "primary" : "secondary"}
+            onPress={() => setTab("ingredients")}
+            style={{ flex: 1 }}
+          />
+          <Button
+            label="Steps"
+            compact
+            variant={tab === "steps" ? "primary" : "secondary"}
+            onPress={() => setTab("steps")}
+            style={{ flex: 1 }}
+          />
         </View>
-      )}
+
+        {tab === "ingredients" ? (
+          <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl }}>
+            {recipe.ingredients.map((ingredient, index) => {
+              const done = ticked.has(index);
+              return (
+                <Pressable
+                  key={index}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: done }}
+                  onPress={() => toggle(index)}
+                  style={({ pressed }) => [
+                    styles.row,
+                    { borderBottomColor: colors.border },
+                    pressed && { opacity: opacity.pressed },
+                  ]}>
+                  <SymbolView
+                    name={done ? icons.checked : icons.unchecked}
+                    size={sizes.icon + 6}
+                    tintColor={done ? colors.accent : colors.muted}
+                  />
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: fontSize.title,
+                      textDecorationLine: done ? "line-through" : "none",
+                      opacity: done ? opacity.subtle : 1,
+                    }}>
+                    {ingredient.raw}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : recipe.steps.length === 0 ? (
+          <EmptyState title="No steps" message="This recipe has no instructions." />
+        ) : (
+          <View style={{ flex: 1 }}>
+            <Text variant="label" style={{ paddingHorizontal: spacing.xxl }}>
+              Step {step + 1} of {recipe.steps.length}
+            </Text>
+            <ScrollView contentContainerStyle={{ padding: spacing.xxl }}>
+              <Text style={{ fontSize: fontSize.display, lineHeight: fontSize.display * 1.35 }}>
+                {recipe.steps[step]}
+              </Text>
+            </ScrollView>
+            <View style={{ flexDirection: "row", gap: spacing.md, padding: spacing.lg }}>
+              <Button
+                label="Previous"
+                variant="secondary"
+                disabled={step === 0}
+                onPress={() => setStep(step - 1)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                label={step === lastStep ? "Done" : "Next"}
+                onPress={() => (step === lastStep ? goBack() : setStep(step + 1))}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        )}
+      </ContentColumn>
     </Screen>
   );
 }

@@ -6,6 +6,7 @@ import { Alert, Linking, ScrollView } from "react-native";
 import {
   AppBar,
   Button,
+  ContentColumn,
   EmptyState,
   IconButton,
   Screen,
@@ -74,36 +75,38 @@ export default function RecipeScreen() {
           />
         }
       />
-      <ScrollView contentContainerStyle={{ padding: spacing.xxl, gap: spacing.md }}>
-        <Text variant="title">{recipe.name}</Text>
-        {recipe.image ? (
-          <Image
-            source={{ uri: recipe.image }}
-            style={{ width: "100%", aspectRatio: 4 / 3, borderRadius: radius.md }}
+      <ContentColumn>
+        <ScrollView contentContainerStyle={{ padding: spacing.xxl, gap: spacing.md }}>
+          <Text variant="title">{recipe.name}</Text>
+          {recipe.image ? (
+            <Image
+              source={{ uri: recipe.image }}
+              style={{ width: "100%", aspectRatio: 4 / 3, borderRadius: radius.md }}
+            />
+          ) : null}
+          {meta ? <Text variant="muted">{meta}</Text> : null}
+          <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
+          {recipe.ingredients.map((item, i) => (
+            <Text key={i}>• {item.raw}</Text>
+          ))}
+          <SectionHeader title="Steps" count={recipe.steps.length} />
+          {recipe.steps.map((step, i) => (
+            <Text key={i}>
+              {i + 1}. {step}
+            </Text>
+          ))}
+          <Button
+            label="Start cooking"
+            onPress={() => router.push(`/recipe/${recipe.id}/cook`)}
+            style={{ marginTop: spacing.lg }}
           />
-        ) : null}
-        {meta ? <Text variant="muted">{meta}</Text> : null}
-        <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
-        {recipe.ingredients.map((item, i) => (
-          <Text key={i}>• {item.raw}</Text>
-        ))}
-        <SectionHeader title="Steps" count={recipe.steps.length} />
-        {recipe.steps.map((step, i) => (
-          <Text key={i}>
-            {i + 1}. {step}
-          </Text>
-        ))}
-        <Button
-          label="Start cooking"
-          onPress={() => router.push(`/recipe/${recipe.id}/cook`)}
-          style={{ marginTop: spacing.lg }}
-        />
-        <Button
-          label="View original page"
-          variant="secondary"
-          onPress={() => Linking.openURL(recipe.sourceUrl)}
-        />
-      </ScrollView>
+          <Button
+            label="View original page"
+            variant="secondary"
+            onPress={() => Linking.openURL(recipe.sourceUrl)}
+          />
+        </ScrollView>
+      </ContentColumn>
     </Screen>
   );
 }

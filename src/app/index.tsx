@@ -3,7 +3,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
 import { FlatList } from "react-native";
 
-import { AppBar, EmptyState, RecipeRow, Screen } from "@/components";
+import { AppBar, ContentColumn, EmptyState, RecipeRow, Screen } from "@/components";
 import { listRecipes, recipeMeta, type Recipe } from "@/storage";
 
 export default function RecipesScreen() {
@@ -26,26 +26,28 @@ export default function RecipesScreen() {
   return (
     <Screen>
       <AppBar title="Recipes" />
-      {recipes === undefined ? null : recipes.length === 0 ? (
-        <EmptyState
-          title="No recipes yet"
-          message="Open a recipe in Safari, tap Share, and choose this app to save it."
-        />
-      ) : (
-        <FlatList
-          data={recipes}
-          keyExtractor={(item) => String(item.id)}
-          contentInsetAdjustmentBehavior="automatic"
-          renderItem={({ item }) => (
-            <RecipeRow
-              name={item.name}
-              image={item.image}
-              meta={recipeMeta(item) || undefined}
-              onPress={() => router.push(`/recipe/${item.id}`)}
-            />
-          )}
-        />
-      )}
+      <ContentColumn>
+        {recipes === undefined ? null : recipes.length === 0 ? (
+          <EmptyState
+            title="No recipes yet"
+            message="Open a recipe in Safari, tap Share, and choose this app to save it."
+          />
+        ) : (
+          <FlatList
+            data={recipes}
+            keyExtractor={(item) => String(item.id)}
+            contentInsetAdjustmentBehavior="automatic"
+            renderItem={({ item }) => (
+              <RecipeRow
+                name={item.name}
+                image={item.image}
+                meta={recipeMeta(item) || undefined}
+                onPress={() => router.push(`/recipe/${item.id}`)}
+              />
+            )}
+          />
+        )}
+      </ContentColumn>
     </Screen>
   );
 }
