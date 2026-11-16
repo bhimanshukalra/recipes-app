@@ -11,6 +11,8 @@ type RecipeRow = {
   totalTime: string | null;
   ingredients: string;
   steps: string;
+  favourite: number;
+  tags: string;
   createdAt: number;
 };
 
@@ -32,6 +34,8 @@ function fromRow(row: RecipeRow): Recipe {
     totalTime: row.totalTime ?? undefined,
     ingredients: parseJson<Ingredient[]>(row.ingredients, []),
     steps: parseJson<string[]>(row.steps, []),
+    favourite: row.favourite === 1,
+    tags: parseJson<string[]>(row.tags, []),
     createdAt: row.createdAt,
   };
 }
@@ -97,4 +101,14 @@ export async function getRecipeBySourceUrl(
 export async function deleteRecipe(db: SQLiteDatabase, id: number): Promise<boolean> {
   const result = await db.runAsync("DELETE FROM recipes WHERE id = ?", id);
   return result.changes > 0;
+}
+
+/** Marks a recipe as a favourite, or not. */
+export async function setFavourite(db: SQLiteDatabase, id: number, favourite: boolean): Promise<void> {
+  await db.runAsync("UPDATE recipes SET favourite = ? WHERE id = ?", favourite ? 1 : 0, id);
+}
+
+/** Replaces a recipe's tags. Callers pass them already normalised (see `normaliseTag`). */
+export async function setTags(db: SQLiteDatabase, id: number, tags: string[]): Promise<void> {
+  await db.runAsync("UPDATE recipes SET tags = ? WHERE id = ?", JSON.stringify(tags), id);
 }

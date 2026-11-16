@@ -5,7 +5,7 @@ import { parseIngredient } from "@/ingredients";
 export const DATABASE_NAME = "recipes.db";
 
 /** Bump when the schema or the stored data format changes, and add a migration block below. */
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 
 function parseJson<T>(text: string, fallback: T): T {
   try {
@@ -57,7 +57,15 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
     });
   }
 
-  // Future migrations: add `if (currentVersion < 4) { ... }` blocks here.
+  if (currentVersion < 4) {
+    // Version 4: favourites and tags. Existing recipes start as not favourite, with no tags.
+    await db.execAsync(`
+      ALTER TABLE recipes ADD COLUMN favourite INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE recipes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';
+    `);
+  }
+
+  // Future migrations: add `if (currentVersion < 5) { ... }` blocks here.
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }

@@ -1,6 +1,7 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { Alert, Linking, ScrollView, StyleSheet, View } from "react-native";
 
 import {
@@ -11,9 +12,18 @@ import {
   IconButton,
   Screen,
   SectionHeader,
+  TagEditor,
   Text,
 } from "@/components";
-import { deleteRecipe, recipeMeta, useRecipe } from "@/storage";
+import {
+  collectTags,
+  deleteRecipe,
+  listRecipes,
+  recipeMeta,
+  setFavourite,
+  setTags,
+  useRecipe,
+} from "@/storage";
 import { radius, spacing, useTheme } from "@/theme";
 
 function goBack() {
@@ -25,7 +35,17 @@ export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
   const { colors } = useTheme();
-  const recipe = useRecipe(id);
+  const loaded = useRecipe(id);
+
+  // Favourite and tags change on this screen, so keep the user's edits over the loaded copy.
+  const [edits, setEdits] = useState<{ favourite?: boolean; tags?: string[] }>({});
+  const recipe = loaded ? { ...loaded, ...edits } : loaded;
+
+  // Tags already used on other recipes, offered as one-tap suggestions.
+  const [knownTags, setKnownTags] = useState<string[]>([]);
+  useEffect(() => {
+    listRecipes(db).then((all) => setKnownTags(collectTags(all)));
+  }, [db]);
 
   const backButton = <IconButton symbol="back" label="Back" onPress={goBack} />;
 
@@ -69,6 +89,16 @@ export default function RecipeScreen() {
         right={
           <View style={{ flexDirection: "row" }}>
             <IconButton
+              symbol={recipe.favourite ? "favourited" : "favourite"}
+              label={recipe.favourite ? "Remove from favourites" : "Add to favourites"}
+              tintColor={recipe.favourite ? colors.danger : colors.text}
+              onPress={() => {
+                const favourite = !recipe.favourite;
+                setEdits((current) => ({ ...current, favourite }));
+                setFavourite(db, recipe.id, favourite);
+              }}
+            />
+            <IconButton
               symbol="link"
               label="View original page"
               onPress={() => Linking.openURL(recipe.sourceUrl)}
@@ -92,6 +122,15 @@ export default function RecipeScreen() {
             />
           ) : null}
           {meta ? <Text variant="muted">{meta}</Text> : null}
+          <SectionHeader title="Tags" />
+          <TagEditor
+            tags={recipe.tags}
+            suggestions={knownTags}
+            onChange={(tags) => {
+              setEdits((current) => ({ ...current, tags }));
+              setTags(db, recipe.id, tags);
+            }}
+          />
           <SectionHeader title="Ingredients" count={recipe.ingredients.length} />
           {recipe.ingredients.map((item, i) => (
             <Text key={i}>• {item.raw}</Text>
