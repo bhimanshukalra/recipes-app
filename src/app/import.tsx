@@ -35,7 +35,11 @@ export default function ImportScreen() {
       <Screen edges={["top", "left", "right", "bottom"]}>
         <EmptyState
           title="Couldn't save this recipe"
-          message="The page didn't contain a recipe the app could read."
+          message={
+            recipe
+              ? "Something went wrong while saving it. Try sharing the page again."
+              : "The shared page didn't contain a recipe the app could read."
+          }
           action={<Button label="Go to my recipes" onPress={() => router.replace("/")} />}
         />
       </Screen>

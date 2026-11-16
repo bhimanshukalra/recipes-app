@@ -63,6 +63,11 @@ export function collectSteps(instructions: unknown): string[] {
   });
 }
 
+/** A recipe with neither ingredients nor steps is not worth saving. */
+export function isUsableRecipe(recipe: CompactRecipe | undefined): recipe is CompactRecipe {
+  return !!recipe && (recipe.ingredients.length > 0 || recipe.steps.length > 0);
+}
+
 export function extractRecipe(
   jsonld: string[],
   url?: string,
