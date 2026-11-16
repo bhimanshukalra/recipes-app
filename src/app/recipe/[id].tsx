@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ScrollView } from "react-native";
 
 import { EmptyState, Screen, SectionHeader, Text } from "@/components";
-import { getRecipe, type Recipe } from "@/storage";
+import { getRecipe, recipeMeta, type Recipe } from "@/storage";
 import { radius, spacing } from "@/theme";
 
 export default function RecipeScreen() {
@@ -33,9 +33,7 @@ export default function RecipeScreen() {
     );
   }
 
-  const meta = [recipe.recipeYield && `Yield: ${recipe.recipeYield}`, recipe.totalTime]
-    .filter(Boolean)
-    .join(" · ");
+  const meta = recipeMeta(recipe);
 
   return (
     <Screen>
